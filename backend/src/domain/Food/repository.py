@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from src.domain.Food.models import FoodModel
-from src.domain.Food.schemas import Food, Protein, Carbs, Fat, AminoAcid, FatType
+from src.domain.Food.schemas import Food, Protein, Carbs, Fat, AminoAcid
 from src.api.schemas import FoodRequest
 
 
@@ -17,8 +17,9 @@ class FoodRepository:
         return Food(
             id=model.id,
             name=model.name,
+            serving_name=model.serving_name,
+            serving_size=model.serving_size,
             calories=model.calories,
-            grams=model.grams,
             protein=Protein(
                 grams=model.protein_grams,
                 complete_amino_acid_profile=model.protein_complete_amino_acid_profile,
@@ -32,7 +33,11 @@ class FoodRepository:
             ),
             fat=Fat(
                 grams=model.fat_grams,
-                fat_type=FatType(model.fat_type)
+                saturated=model.fat_saturated,
+                monounsaturated=model.fat_monounsaturated,
+                polyunsaturated=model.fat_polyunsaturated,
+                trans=model.fat_trans,
+                cholesterol=model.fat_cholesterol
             )
         )
 
@@ -53,8 +58,9 @@ class FoodRepository:
         
         model = FoodModel(
             name=food.name,
+            serving_name=food.serving_name,
+            serving_size=food.serving_size,
             calories=food.calories,
-            grams=food.grams,
             protein_grams=food.protein.grams,
             protein_complete_amino_acid_profile=food.protein.complete_amino_acid_profile,
             protein_amino_acids=amino_acids_json,
@@ -63,7 +69,11 @@ class FoodRepository:
             carbs_sugar=food.carbs.sugar,
             carbs_added_sugars=food.carbs.added_sugars,
             fat_grams=food.fat.grams,
-            fat_type=food.fat.fat_type.value
+            fat_saturated=food.fat.saturated,
+            fat_monounsaturated=food.fat.monounsaturated,
+            fat_polyunsaturated=food.fat.polyunsaturated,
+            fat_trans=food.fat.trans,
+            fat_cholesterol=food.fat.cholesterol
         )
         self.db.add(model)
         self.db.commit()
@@ -80,8 +90,9 @@ class FoodRepository:
             amino_acids_json = [aa.value for aa in food.protein.amino_acids]
         
         model.name = food.name
+        model.serving_name = food.serving_name
+        model.serving_size = food.serving_size
         model.calories = food.calories
-        model.grams = food.grams
         model.protein_grams = food.protein.grams
         model.protein_complete_amino_acid_profile = food.protein.complete_amino_acid_profile
         model.protein_amino_acids = amino_acids_json
@@ -90,7 +101,11 @@ class FoodRepository:
         model.carbs_sugar = food.carbs.sugar
         model.carbs_added_sugars = food.carbs.added_sugars
         model.fat_grams = food.fat.grams
-        model.fat_type = food.fat.fat_type.value
+        model.fat_saturated = food.fat.saturated
+        model.fat_monounsaturated = food.fat.monounsaturated
+        model.fat_polyunsaturated = food.fat.polyunsaturated
+        model.fat_trans = food.fat.trans
+        model.fat_cholesterol = food.fat.cholesterol
         
         self.db.commit()
         self.db.refresh(model)

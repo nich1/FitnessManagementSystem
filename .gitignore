@@ -1,0 +1,5 @@
+# Db
+backend/fitness.db
+
+# Initial development migration scripts
+migrations/
