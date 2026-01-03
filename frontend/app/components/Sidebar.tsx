@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export type View = 'daily' | 'foods' | 'meals' | 'exercises' | 'movement-patterns' | 'workouts' | 'cups' | 'supplements' | 'compounds' | 'stats' | 'carb-cycle' | 'mesocycle' | 'supplement-cycle';
+export type View = 'daily' | 'foods' | 'meals' | 'exercises' | 'movement-patterns' | 'workouts' | 'cups' | 'supplements' | 'compounds' | 'stats' | 'carb-cycle' | 'mesocycle' | 'supplement-cycle' | 'weight';
 
 interface SidebarProps {
   currentView: View;
@@ -29,6 +29,7 @@ const isDropdown = (item: NavEntry): item is DropdownNavItem => {
 
 const navItems: NavEntry[] = [
   { view: 'daily', label: 'Daily Log', icon: '📅' },
+  { view: 'weight', label: 'Weight', icon: '⚖️' },
   { view: 'foods', label: 'Foods', icon: '🍎' },
   { view: 'meals', label: 'Meals', icon: '🍽️' },
   { view: 'movement-patterns', label: 'Movement Patterns', icon: '🔄' },

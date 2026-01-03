@@ -2561,6 +2561,233 @@ input[type="number"] {
   text-align: center;
 }
 
+/* Weight Manager Page */
+.weight-manager {
+  max-width: 800px;
+}
+
+.weight-weeks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Week Group */
+.weight-week-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.weight-week-group.current-week {
+  border-color: rgba(0, 217, 255, 0.3);
+  box-shadow: 0 0 0 1px rgba(0, 217, 255, 0.1);
+}
+
+/* Week Header */
+.weight-week-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.weight-week-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weight-week-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+}
+
+.weight-week-range {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.weight-current-week-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  color: var(--bg-primary);
+  border-radius: 999px;
+}
+
+.weight-week-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.weight-week-avg {
+  color: var(--text-secondary);
+}
+
+.weight-week-avg strong {
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.weight-change {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+.weight-change-up {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.weight-change-down {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.weight-week-entries {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.weight-week-no-data {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Week Entries List */
+.weight-week-entries-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.weight-entry-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s ease;
+}
+
+.weight-entry-row:last-child {
+  border-bottom: none;
+}
+
+.weight-entry-row:hover {
+  background: var(--bg-hover);
+}
+
+.weight-entry-today {
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.06) 0%, rgba(124, 58, 237, 0.03) 100%);
+}
+
+.weight-entry-today:hover {
+  background: linear-gradient(135deg, rgba(0, 217, 255, 0.1) 0%, rgba(124, 58, 237, 0.06) 100%);
+}
+
+.weight-entry-date {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.weight-today-badge {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  color: var(--bg-primary);
+  border-radius: 999px;
+}
+
+.weight-entry-value {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.weight-value-clickable {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  min-width: 90px;
+  text-align: right;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+  color: var(--text-primary);
+}
+
+.weight-value-clickable:hover {
+  background: var(--bg-tertiary);
+  color: var(--accent-primary);
+}
+
+.weight-table-input {
+  width: 100px;
+  padding: 0.35rem 0.75rem;
+  background: var(--bg-tertiary);
+  border: 2px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  text-align: right;
+  outline: none;
+}
+
+.weight-table-input:focus {
+  border-color: var(--accent-secondary);
+  box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.2);
+}
+
+/* Hide number input spinners */
+.weight-table-input::-webkit-outer-spin-button,
+.weight-table-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.weight-table-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+@media (max-width: 600px) {
+  .weight-week-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .weight-week-stats {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .weight-entry-row {
+    padding: 0.75rem 1rem;
+  }
+}
+
 /* ============================================================================
    Manager Views
    ============================================================================ */
@@ -4417,6 +4644,66 @@ input[type="number"] {
 .rir-input {
   width: 60px !important;
   flex: 0 0 60px !important;
+}
+
+/* Movement Pattern Card Styles */
+.movement-pattern-card {
+  border: 2px dashed var(--accent-secondary);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(0, 217, 255, 0.03) 100%);
+}
+
+.movement-pattern-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, var(--accent-secondary) 0%, var(--accent-primary) 100%);
+  color: var(--bg-primary);
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.25rem;
+}
+
+.movement-pattern-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.movement-pattern-selector {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
+}
+
+.movement-pattern-selector .form-label {
+  font-size: 0.8rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary);
+}
+
+.movement-pattern-selector .form-select {
+  width: 100%;
+}
+
+.movement-pattern-warning {
+  padding: 0.75rem 1rem;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  color: #f59e0b;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.form-hint-warning {
+  font-size: 0.85rem;
+  color: #f59e0b;
+  padding: 0.5rem;
+  background: rgba(245, 158, 11, 0.1);
+  border-radius: var(--radius-sm);
 }
 
 /* Workout Builder Styles */

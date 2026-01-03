@@ -35,6 +35,7 @@ import CarbCycleManager from './components/managers/CarbCycleManager';
 import MesocycleManager from './components/managers/MesocycleManager';
 import SupplementCycleManager from './components/managers/SupplementCycleManager';
 import StatsView from './components/StatsView';
+import WeightManager from './components/managers/WeightManager';
 import { useConfirmDialog } from './components/ConfirmDialog';
 
 type ModalType = 'sleep' | 'food' | 'workout' | 'cardio' | 'stress' | 'hydration' | 'supplement' | 'quickstats' | 'addExercise' | null;
@@ -915,6 +916,8 @@ export default function Home() {
         return <SupplementCycleManager />;
       case 'stats':
         return <StatsView />;
+      case 'weight':
+        return <WeightManager onWeightUpdated={() => fetchLogEntry(selectedDate)} />;
       case 'daily':
       default:
         return (
