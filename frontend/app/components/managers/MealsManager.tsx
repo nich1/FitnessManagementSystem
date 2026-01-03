@@ -95,7 +95,7 @@ export default function MealsManager() {
       const food = getFoodById(Number(value));
       newFoods[index] = { food_id: Number(value), amount: String(food?.serving_size || 100) };
     } else {
-      newFoods[index] = { ...newFoods[index], [field]: value };
+      newFoods[index] = { ...newFoods[index], amount: String(value) };
     }
     setFormData({ ...formData, foods: newFoods });
   };

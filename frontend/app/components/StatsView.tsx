@@ -389,7 +389,8 @@ export default function StatsView() {
 
     const data = getChartData();
     const ChartComponent = chartType === 'bar' ? BarChart : chartType === 'area' ? AreaChart : LineChart;
-    const DataComponent = chartType === 'bar' ? Bar : chartType === 'area' ? Area : Line;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const DataComponent: any = chartType === 'bar' ? Bar : chartType === 'area' ? Area : Line;
 
     return (
       <ResponsiveContainer width="100%" height={400}>
