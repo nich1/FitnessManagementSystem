@@ -121,6 +121,12 @@ async def upload_progress_picture(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@progress_picture_router.get("/all", response_model=list[ProgressPicture])
+def get_all_pictures(db: Session = Depends(get_db)):
+    """Get all progress pictures across all log entries"""
+    return progress_picture_service.get_all_progress_pictures(db)
+
+
 @progress_picture_router.get("/log-entry/{log_entry_id}", response_model=list[ProgressPicture])
 def get_pictures_for_log_entry(log_entry_id: int, db: Session = Depends(get_db)):
     """Get all progress pictures for a log entry"""

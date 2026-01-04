@@ -36,6 +36,7 @@ import MesocycleManager from './components/managers/MesocycleManager';
 import SupplementCycleManager from './components/managers/SupplementCycleManager';
 import StatsView from './components/StatsView';
 import WeightManager from './components/managers/WeightManager';
+import ComparisonTool from './components/managers/ComparisonTool';
 import { useConfirmDialog } from './components/ConfirmDialog';
 
 type ModalType = 'sleep' | 'food' | 'workout' | 'cardio' | 'stress' | 'hydration' | 'supplement' | 'quickstats' | 'addExercise' | null;
@@ -53,7 +54,11 @@ export default function Home() {
   const [exerciseSearchQuery, setExerciseSearchQuery] = useState('');
 
   const formatDateForApi = (date: Date) => {
-    return date.toISOString().split('T')[0];
+    // Use local timezone, not UTC (toISOString converts to UTC which causes date shifts)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const fetchLogEntry = useCallback(async (date: Date) => {
@@ -1251,6 +1256,8 @@ export default function Home() {
         return <StatsView />;
       case 'weight':
         return <WeightManager onWeightUpdated={() => fetchLogEntry(selectedDate)} />;
+      case 'comparison-tool':
+        return <ComparisonTool />;
       case 'daily':
       default:
         return (

@@ -30,6 +30,12 @@ class ProgressPictureRepository:
         ).order_by(ProgressPictureModel.created_at.desc()).all()
         return [self._model_to_schema(m) for m in models]
 
+    def get_all(self) -> list[ProgressPicture]:
+        models = self.db.query(ProgressPictureModel).order_by(
+            ProgressPictureModel.created_at.desc()
+        ).all()
+        return [self._model_to_schema(m) for m in models]
+
     def create(
         self,
         log_entry_id: int,

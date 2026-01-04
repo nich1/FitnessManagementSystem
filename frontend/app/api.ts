@@ -344,6 +344,8 @@ export const mesocycleApi = {
 // ============================================================================
 
 export const progressPictureApi = {
+  getAll: () => fetchApi<ProgressPicture[]>('/api/progress-pictures/all'),
+  
   getByLogEntry: (logEntryId: number) => 
     fetchApi<ProgressPicture[]>(`/api/progress-pictures/log-entry/${logEntryId}`),
   

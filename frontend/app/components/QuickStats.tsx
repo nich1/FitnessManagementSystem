@@ -438,7 +438,9 @@ export default function QuickStats({ logEntry, selectedDate, onEdit }: QuickStat
       return `${hours}h ${minutes}m`;
     }
     
-    const decimals = card.decimals ?? 0;
+    // Weight metrics should show 1 decimal by default
+    const isWeightMetric = card.metric === 'morning_weight' || card.metric === 'weight';
+    const decimals = card.decimals ?? (isWeightMetric ? 1 : 0);
     const formatted = decimals > 0 ? value.toFixed(decimals) : Math.round(value).toLocaleString();
     return card.unit ? `${formatted}` : formatted;
   };

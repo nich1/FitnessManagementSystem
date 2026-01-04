@@ -13,6 +13,11 @@ def get_progress_pictures_by_log_entry(db: Session, log_entry_id: int) -> list[P
     return repo.get_by_log_entry(log_entry_id)
 
 
+def get_all_progress_pictures(db: Session) -> list[ProgressPicture]:
+    repo = ProgressPictureRepository(db)
+    return repo.get_all()
+
+
 def create_progress_picture(
     db: Session,
     log_entry_id: int,
