@@ -39,6 +39,7 @@ export default function ComparisonTool() {
   const [draggedPhoto, setDraggedPhoto] = useState<string | null>(null);
   const [comparisonName, setComparisonName] = useState('');
   const [showNameDialog, setShowNameDialog] = useState(false);
+  const [selectedPictures, setSelectedPictures] = useState<Set<number>>(new Set());
 
   // Load comparisons from localStorage
   useEffect(() => {
@@ -123,16 +124,32 @@ export default function ComparisonTool() {
     }
   };
 
-  const addPhotoToComparison = (picture: ProgressPicture) => {
-    if (!activeComparison) return;
+  const togglePictureSelection = (pictureId: number) => {
+    setSelectedPictures(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(pictureId)) {
+        newSet.delete(pictureId);
+      } else {
+        newSet.add(pictureId);
+      }
+      return newSet;
+    });
+  };
 
-    // Find the next available position
+  const addSelectedPhotosToComparison = () => {
+    if (!activeComparison || selectedPictures.size === 0) return;
+
+    const picturesToAdd = availablePictures.filter(p => selectedPictures.has(p.id));
+    
+    // Find starting position
     const existingPositions = new Set(
       activeComparison.photos.map(p => `${p.gridColumn}-${p.gridRow}`)
     );
     
     let col = 0;
     let row = 0;
+    
+    // Find first available position
     while (existingPositions.has(`${col}-${row}`)) {
       col++;
       if (col >= GRID_COLS) {
@@ -141,22 +158,45 @@ export default function ComparisonTool() {
       }
     }
 
-    const newPhoto: ComparisonPhoto = {
-      id: `photo-${Date.now()}`,
-      pictureId: picture.id,
-      url: `${API_BASE}${picture.url}`,
-      label: picture.label,
-      date: picture.created_at,
-      gridColumn: col,
-      gridRow: row,
-      width: 1,
-      height: 1,
-    };
+    const newPhotos: ComparisonPhoto[] = [];
+    
+    for (const picture of picturesToAdd) {
+      // Skip to next available position
+      while (existingPositions.has(`${col}-${row}`)) {
+        col++;
+        if (col >= GRID_COLS) {
+          col = 0;
+          row++;
+        }
+      }
+      
+      const newPhoto: ComparisonPhoto = {
+        id: `photo-${Date.now()}-${picture.id}`,
+        pictureId: picture.id,
+        url: `${API_BASE}${picture.url}`,
+        label: picture.label,
+        date: picture.log_entry_date || picture.created_at,
+        gridColumn: col,
+        gridRow: row,
+        width: 1,
+        height: 1,
+      };
+      
+      newPhotos.push(newPhoto);
+      existingPositions.add(`${col}-${row}`);
+      
+      col++;
+      if (col >= GRID_COLS) {
+        col = 0;
+        row++;
+      }
+    }
 
     setActiveComparison({
       ...activeComparison,
-      photos: [...activeComparison.photos, newPhoto],
+      photos: [...activeComparison.photos, ...newPhotos],
     });
+    setSelectedPictures(new Set());
     setShowPicturePicker(false);
   };
 
@@ -347,9 +387,21 @@ export default function ComparisonTool() {
                       </button>
                     </>
                   ) : (
-                    <button className="btn-edit" onClick={() => setIsEditing(true)}>
-                      Edit
-                    </button>
+                    <>
+                      <button className="btn-edit" onClick={() => setIsEditing(true)}>
+                        Edit
+                      </button>
+                      <button 
+                        className="btn-delete-comparison"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this comparison?')) {
+                            deleteComparison(activeComparison.id);
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -370,7 +422,7 @@ export default function ComparisonTool() {
                         className="btn-add-photo-large"
                         onClick={() => setShowPicturePicker(true)}
                       >
-                        + Add Your First Photo
+                        + Add Photos
                       </button>
                     )}
                   </div>
@@ -443,31 +495,65 @@ export default function ComparisonTool() {
 
       {/* Picture picker modal */}
       {showPicturePicker && (
-        <div className="picture-picker-overlay" onClick={() => setShowPicturePicker(false)}>
+        <div className="picture-picker-overlay" onClick={() => { setShowPicturePicker(false); setSelectedPictures(new Set()); }}>
           <div className="picture-picker-modal" onClick={e => e.stopPropagation()}>
             <div className="picture-picker-header">
-              <h3>Select a Photo</h3>
-              <button className="picture-picker-close" onClick={() => setShowPicturePicker(false)}>
-                ×
-              </button>
+              <h3>Select Photos</h3>
+              <div className="picture-picker-header-actions">
+                {selectedPictures.size > 0 && (
+                  <button 
+                    className="picture-picker-add-btn"
+                    onClick={addSelectedPhotosToComparison}
+                  >
+                    Add {selectedPictures.size} Photo{selectedPictures.size !== 1 ? 's' : ''}
+                  </button>
+                )}
+                <button className="picture-picker-close" onClick={() => { setShowPicturePicker(false); setSelectedPictures(new Set()); }}>
+                  ×
+                </button>
+              </div>
             </div>
-            <div className="picture-picker-grid">
+            <div className="picture-picker-content">
               {availablePictures.length === 0 ? (
                 <div className="picture-picker-empty">
                   <p>No progress pictures found</p>
                   <p className="hint">Add progress pictures from the Daily Log view first</p>
                 </div>
               ) : (
-                availablePictures.map(picture => (
-                  <div
-                    key={picture.id}
-                    className="picture-picker-item"
-                    onClick={() => addPhotoToComparison(picture)}
-                  >
-                    <img src={`${API_BASE}${picture.url}`} alt={picture.label || 'Progress photo'} />
-                    <div className="picture-picker-item-info">
-                      <span className="picture-picker-item-date">{formatDate(picture.created_at)}</span>
-                      {picture.label && <span className="picture-picker-item-label">{picture.label}</span>}
+                // Group pictures by log entry date
+                Object.entries(
+                  availablePictures.reduce((groups, picture) => {
+                    // Use log_entry_date if available, fall back to created_at
+                    const dateKey = (picture.log_entry_date || picture.created_at).split('T')[0];
+                    if (!groups[dateKey]) groups[dateKey] = [];
+                    groups[dateKey].push(picture);
+                    return groups;
+                  }, {} as Record<string, typeof availablePictures>)
+                )
+                .sort(([a], [b]) => b.localeCompare(a)) // Sort dates descending (newest first)
+                .map(([dateKey, pictures]) => (
+                  <div key={dateKey} className="picture-picker-date-group">
+                    <div className="picture-picker-date-header">
+                      {formatDate(dateKey + 'T00:00:00')}
+                    </div>
+                    <div className="picture-picker-grid">
+                      {pictures.map(picture => (
+                        <div
+                          key={picture.id}
+                          className={`picture-picker-item ${selectedPictures.has(picture.id) ? 'selected' : ''}`}
+                          onClick={() => togglePictureSelection(picture.id)}
+                        >
+                          <img src={`${API_BASE}${picture.url}`} alt={picture.label || 'Progress photo'} />
+                          {selectedPictures.has(picture.id) && (
+                            <div className="picture-picker-item-check">✓</div>
+                          )}
+                          {picture.label && (
+                            <div className="picture-picker-item-info">
+                              <span className="picture-picker-item-label">{picture.label}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))

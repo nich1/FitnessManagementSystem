@@ -13,5 +13,6 @@ class ProgressPicture(BaseModel):
     original_filename: str
     mime_type: str
     created_at: datetime
+    log_entry_date: datetime | None = None  # Date of the log entry this picture belongs to
     url: str  # Will be constructed from filename
 

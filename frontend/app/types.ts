@@ -365,6 +365,7 @@ export interface ProgressPicture {
   original_filename: string;
   mime_type: string;
   created_at: string;
+  log_entry_date?: string;  // Date of the log entry this picture belongs to
   url: string;
 }
 
