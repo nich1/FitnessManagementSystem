@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import type { ProgressPicture } from '../types';
 import { progressPictureApi } from '../api';
+import { useConfirmDialog } from './ConfirmDialog';
 
 interface ProgressPicturesSectionProps {
   logEntryId?: number;
@@ -34,6 +35,7 @@ export default function ProgressPicturesSection({
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
   const [viewingPicture, setViewingPicture] = useState<ProgressPicture | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
   const validateFile = (file: File): string | null => {
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -135,7 +137,15 @@ export default function ProgressPicturesSection({
   };
 
   const handleDelete = async (pictureId: number) => {
-    if (!confirm('Delete this picture?')) return;
+    const confirmed = await confirm({
+      title: 'Delete Picture',
+      message: 'Are you sure you want to delete this progress picture? This action cannot be undone.',
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      variant: 'danger',
+    });
+    
+    if (!confirmed) return;
     
     try {
       await progressPictureApi.delete(pictureId);
@@ -335,6 +345,9 @@ export default function ProgressPicturesSection({
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </div>
   );
 }

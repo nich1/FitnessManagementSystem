@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { ProgressPicture } from '../../types';
 import { progressPictureApi } from '../../api';
+import { useConfirmDialog } from '../ConfirmDialog';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -40,6 +41,7 @@ export default function ComparisonTool() {
   const [comparisonName, setComparisonName] = useState('');
   const [showNameDialog, setShowNameDialog] = useState(false);
   const [selectedPictures, setSelectedPictures] = useState<Set<number>>(new Set());
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
   // Load comparisons from localStorage
   useEffect(() => {
@@ -393,8 +395,15 @@ export default function ComparisonTool() {
                       </button>
                       <button 
                         className="btn-delete-comparison"
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this comparison?')) {
+                        onClick={async () => {
+                          const confirmed = await confirm({
+                            title: 'Delete Comparison',
+                            message: 'Are you sure you want to delete this comparison? This action cannot be undone.',
+                            confirmText: 'Delete',
+                            cancelText: 'Cancel',
+                            variant: 'danger',
+                          });
+                          if (confirmed) {
                             deleteComparison(activeComparison.id);
                           }
                         }}
@@ -562,6 +571,9 @@ export default function ComparisonTool() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </div>
   );
 }
