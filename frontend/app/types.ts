@@ -598,3 +598,32 @@ export interface StatsConfigurationRequest {
   config: StatsConfigurationConfig;
 }
 
+// ============================================================================
+// Quick Stat Card Types
+// ============================================================================
+
+export type QuickStatDisplayMode = 'value' | 'comparison';
+
+export type ComparisonPeriod = 
+  | 'yesterday'
+  | 'last_7_days'
+  | 'last_14_days'
+  | 'last_30_days'
+  | 'last_week_avg'
+  | 'last_month_avg';
+
+export interface QuickStatCardConfig {
+  id: string;
+  label: string;
+  metric: MetricType | 'morning_weight' | 'drinks' | 'carb_day' | 'total_volume' | 'notes';
+  displayMode: QuickStatDisplayMode;
+  comparisonPeriod?: ComparisonPeriod;
+  color?: string;
+  icon?: string;
+  // For exercise-specific metrics
+  exerciseId?: number;
+  // Custom formatting
+  unit?: string;
+  decimals?: number;
+}
+

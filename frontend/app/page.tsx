@@ -532,6 +532,115 @@ export default function Home() {
     }, 500);
   };
 
+  const handleAddSet = async (activityId: number, exerciseId: number) => {
+    if (!logEntry?.activities) return;
+
+    const activity = logEntry.activities.find(a => a.id === activityId);
+    if (!activity) return;
+
+    const exercise = activity.exercises.find(ex => ex.id === exerciseId);
+    if (!exercise) return;
+
+    // Get the last set to copy unit from it
+    const lastSet = exercise.sets[exercise.sets.length - 1];
+    const newSet = {
+      id: Date.now(), // Temporary ID for optimistic update
+      reps: 0,
+      weight: lastSet?.weight ?? 0,
+      unit: lastSet?.unit ?? 'lb' as const,
+      rir: undefined,
+      notes: '',
+    };
+
+    // Optimistically update local state
+    const updatedActivities = logEntry.activities.map(a => {
+      if (a.id !== activityId) return a;
+      return {
+        ...a,
+        exercises: a.exercises.map(ex =>
+          ex.id === exerciseId
+            ? { ...ex, sets: [...ex.sets, newSet] }
+            : ex
+        ),
+      };
+    });
+    setLogEntry({ ...logEntry, activities: updatedActivities });
+
+    // Build payload and save immediately
+    const payload = {
+      workout_id: activity.workout_id,
+      time: activity.time,
+      notes: activity.notes,
+      exercises: updatedActivities.find(a => a.id === activityId)!.exercises.map(ex => ({
+        exercise_id: ex.exercise.id,
+        session_notes: ex.session_notes,
+        sets: ex.sets.map(s => ({
+          reps: s.reps,
+          weight: s.weight,
+          unit: s.unit,
+          rir: s.rir,
+          notes: s.notes,
+        })),
+      })),
+    };
+
+    try {
+      await activityApi.update(activityId, payload);
+    } catch (error) {
+      console.error('Failed to add set:', error);
+      fetchLogEntry(selectedDate);
+    }
+  };
+
+  const handleDeleteSet = async (activityId: number, exerciseId: number, setId: number) => {
+    if (!logEntry?.activities) return;
+
+    const activity = logEntry.activities.find(a => a.id === activityId);
+    if (!activity) return;
+
+    const exercise = activity.exercises.find(ex => ex.id === exerciseId);
+    if (!exercise || exercise.sets.length <= 1) return; // Don't delete the last set
+
+    // Optimistically update local state
+    const updatedActivities = logEntry.activities.map(a => {
+      if (a.id !== activityId) return a;
+      return {
+        ...a,
+        exercises: a.exercises.map(ex =>
+          ex.id === exerciseId
+            ? { ...ex, sets: ex.sets.filter(s => s.id !== setId) }
+            : ex
+        ),
+      };
+    });
+    setLogEntry({ ...logEntry, activities: updatedActivities });
+
+    // Build payload and save immediately
+    const payload = {
+      workout_id: activity.workout_id,
+      time: activity.time,
+      notes: activity.notes,
+      exercises: updatedActivities.find(a => a.id === activityId)!.exercises.map(ex => ({
+        exercise_id: ex.exercise.id,
+        session_notes: ex.session_notes,
+        sets: ex.sets.map(s => ({
+          reps: s.reps,
+          weight: s.weight,
+          unit: s.unit,
+          rir: s.rir,
+          notes: s.notes,
+        })),
+      })),
+    };
+
+    try {
+      await activityApi.update(activityId, payload);
+    } catch (error) {
+      console.error('Failed to delete set:', error);
+      fetchLogEntry(selectedDate);
+    }
+  };
+
   const handleAddExerciseToActivity = async (exerciseId: number) => {
     if (!logEntry?.activities || !addExerciseToActivityId) return;
 
@@ -735,6 +844,230 @@ export default function Home() {
       carb_cycle_day_id: data.carb_cycle_day_id ?? undefined,
     });
     closeModal();
+  };
+
+  // Helper to check if selected date is today
+  const isToday = () => {
+    const today = new Date();
+    return selectedDate.toDateString() === today.toDateString();
+  };
+
+  // Copy to Today handlers
+  const handleCopyFoodsToToday = async () => {
+    if (!logEntry?.foods || logEntry.foods.length === 0) return;
+    
+    const confirmed = await confirm({
+      title: 'Copy Foods to Today',
+      message: `Copy ${logEntry.foods.length} food item(s) to today's log? This will add to any existing foods.`,
+      confirmText: 'Copy',
+      cancelText: 'Cancel',
+      variant: 'info',
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+      const todayStr = formatDateForApi(new Date());
+      const todayEntry = await logEntryApi.getByDate(todayStr);
+      const existingFoods = todayEntry?.foods?.map(f => ({ food_id: f.food.id, servings: f.servings })) || [];
+      const newFoods = logEntry.foods.map(f => ({ food_id: f.food.id, servings: f.servings }));
+      
+      const updateData: LogEntryRequest = {
+        timestamp: todayEntry?.timestamp || `${todayStr}T12:00:00`,
+        phase: todayEntry?.phase ? { type: 'existing', id: todayEntry.phase.id } : undefined,
+        morning_weight: todayEntry?.morning_weight,
+        sleep: todayEntry?.sleep ? { type: 'existing', id: todayEntry.sleep.id } : undefined,
+        hydration: todayEntry?.hydration?.map(h => ({ type: 'existing' as const, id: h.id })),
+        foods: [...existingFoods, ...newFoods],
+        activities: todayEntry?.activities?.map(a => ({ type: 'existing' as const, id: a.id })),
+        cardio: todayEntry?.cardio?.map(c => ({ type: 'existing' as const, id: c.id })),
+        supplements: todayEntry?.supplements?.map(s => ({ type: 'existing' as const, id: s.supplement.id, servings: s.servings })),
+        stress: todayEntry?.stress ? { type: 'existing', id: todayEntry.stress.id } : undefined,
+        num_standard_drinks: todayEntry?.num_standard_drinks,
+        notes: todayEntry?.notes,
+        carb_cycle_day_id: todayEntry?.carb_cycle?.selected_day.id,
+      };
+      
+      if (todayEntry) {
+        await logEntryApi.update(todayEntry.id, updateData);
+      } else {
+        await logEntryApi.create(updateData);
+      }
+      
+      alert('Foods copied to today!');
+    } catch (error) {
+      console.error('Failed to copy foods:', error);
+      alert('Failed to copy foods. Check console for details.');
+    }
+  };
+
+  const handleCopyWorkoutsToToday = async () => {
+    if (!logEntry?.activities || logEntry.activities.length === 0) return;
+    
+    const confirmed = await confirm({
+      title: 'Copy Workouts to Today',
+      message: `Copy ${logEntry.activities.length} workout(s) to today's log? This will add to any existing workouts.`,
+      confirmText: 'Copy',
+      cancelText: 'Cancel',
+      variant: 'info',
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+      const todayStr = formatDateForApi(new Date());
+      const todayEntry = await logEntryApi.getByDate(todayStr);
+      const existingActivities = todayEntry?.activities?.map(a => ({ type: 'existing' as const, id: a.id })) || [];
+      
+      // Create new activities from the source
+      const newActivities = logEntry.activities.map(a => ({
+        type: 'new' as const,
+        workout_id: a.workout_id,
+        time: new Date().toISOString(), // Use current time
+        notes: a.notes,
+        exercises: a.exercises.map(ex => ({
+          exercise_id: ex.exercise.id,
+          session_notes: ex.session_notes,
+          sets: ex.sets.map(s => ({
+            reps: s.reps,
+            weight: s.weight,
+            unit: s.unit,
+            rir: s.rir,
+            notes: s.notes,
+          })),
+        })),
+      }));
+      
+      const updateData: LogEntryRequest = {
+        timestamp: todayEntry?.timestamp || `${todayStr}T12:00:00`,
+        phase: todayEntry?.phase ? { type: 'existing', id: todayEntry.phase.id } : undefined,
+        morning_weight: todayEntry?.morning_weight,
+        sleep: todayEntry?.sleep ? { type: 'existing', id: todayEntry.sleep.id } : undefined,
+        hydration: todayEntry?.hydration?.map(h => ({ type: 'existing' as const, id: h.id })),
+        foods: todayEntry?.foods?.map(f => ({ food_id: f.food.id, servings: f.servings })),
+        activities: [...existingActivities, ...newActivities],
+        cardio: todayEntry?.cardio?.map(c => ({ type: 'existing' as const, id: c.id })),
+        supplements: todayEntry?.supplements?.map(s => ({ type: 'existing' as const, id: s.supplement.id, servings: s.servings })),
+        stress: todayEntry?.stress ? { type: 'existing', id: todayEntry.stress.id } : undefined,
+        num_standard_drinks: todayEntry?.num_standard_drinks,
+        notes: todayEntry?.notes,
+        carb_cycle_day_id: todayEntry?.carb_cycle?.selected_day.id,
+      };
+      
+      if (todayEntry) {
+        await logEntryApi.update(todayEntry.id, updateData);
+      } else {
+        await logEntryApi.create(updateData);
+      }
+      
+      alert('Workouts copied to today!');
+    } catch (error) {
+      console.error('Failed to copy workouts:', error);
+      alert('Failed to copy workouts. Check console for details.');
+    }
+  };
+
+  const handleCopySupplementsToToday = async () => {
+    if (!logEntry?.supplements || logEntry.supplements.length === 0) return;
+    
+    const confirmed = await confirm({
+      title: 'Copy Supplements to Today',
+      message: `Copy ${logEntry.supplements.length} supplement(s) to today's log? This will add to any existing supplements.`,
+      confirmText: 'Copy',
+      cancelText: 'Cancel',
+      variant: 'info',
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+      const todayStr = formatDateForApi(new Date());
+      const todayEntry = await logEntryApi.getByDate(todayStr);
+      const existingSupplements = todayEntry?.supplements?.map(s => ({ type: 'existing' as const, id: s.supplement.id, servings: s.servings })) || [];
+      const newSupplements = logEntry.supplements.map(s => ({ type: 'existing' as const, id: s.supplement.id, servings: s.servings }));
+      
+      const updateData: LogEntryRequest = {
+        timestamp: todayEntry?.timestamp || `${todayStr}T12:00:00`,
+        phase: todayEntry?.phase ? { type: 'existing', id: todayEntry.phase.id } : undefined,
+        morning_weight: todayEntry?.morning_weight,
+        sleep: todayEntry?.sleep ? { type: 'existing', id: todayEntry.sleep.id } : undefined,
+        hydration: todayEntry?.hydration?.map(h => ({ type: 'existing' as const, id: h.id })),
+        foods: todayEntry?.foods?.map(f => ({ food_id: f.food.id, servings: f.servings })),
+        activities: todayEntry?.activities?.map(a => ({ type: 'existing' as const, id: a.id })),
+        cardio: todayEntry?.cardio?.map(c => ({ type: 'existing' as const, id: c.id })),
+        supplements: [...existingSupplements, ...newSupplements],
+        stress: todayEntry?.stress ? { type: 'existing', id: todayEntry.stress.id } : undefined,
+        num_standard_drinks: todayEntry?.num_standard_drinks,
+        notes: todayEntry?.notes,
+        carb_cycle_day_id: todayEntry?.carb_cycle?.selected_day.id,
+      };
+      
+      if (todayEntry) {
+        await logEntryApi.update(todayEntry.id, updateData);
+      } else {
+        await logEntryApi.create(updateData);
+      }
+      
+      alert('Supplements copied to today!');
+    } catch (error) {
+      console.error('Failed to copy supplements:', error);
+      alert('Failed to copy supplements. Check console for details.');
+    }
+  };
+
+  const handleCopyCardioToToday = async () => {
+    if (!logEntry?.cardio || logEntry.cardio.length === 0) return;
+    
+    const confirmed = await confirm({
+      title: 'Copy Cardio to Today',
+      message: `Copy ${logEntry.cardio.length} cardio session(s) to today's log? This will add to any existing cardio.`,
+      confirmText: 'Copy',
+      cancelText: 'Cancel',
+      variant: 'info',
+    });
+    
+    if (!confirmed) return;
+    
+    try {
+      const todayStr = formatDateForApi(new Date());
+      const todayEntry = await logEntryApi.getByDate(todayStr);
+      const existingCardio = todayEntry?.cardio?.map(c => ({ type: 'existing' as const, id: c.id })) || [];
+      
+      // Create new cardio entries from the source
+      const newCardio = logEntry.cardio.map(c => ({
+        type: 'new' as const,
+        name: c.name,
+        time: new Date().toISOString(), // Use current time
+        exercise: c.exercise,
+      }));
+      
+      const updateData: LogEntryRequest = {
+        timestamp: todayEntry?.timestamp || `${todayStr}T12:00:00`,
+        phase: todayEntry?.phase ? { type: 'existing', id: todayEntry.phase.id } : undefined,
+        morning_weight: todayEntry?.morning_weight,
+        sleep: todayEntry?.sleep ? { type: 'existing', id: todayEntry.sleep.id } : undefined,
+        hydration: todayEntry?.hydration?.map(h => ({ type: 'existing' as const, id: h.id })),
+        foods: todayEntry?.foods?.map(f => ({ food_id: f.food.id, servings: f.servings })),
+        activities: todayEntry?.activities?.map(a => ({ type: 'existing' as const, id: a.id })),
+        cardio: [...existingCardio, ...newCardio],
+        supplements: todayEntry?.supplements?.map(s => ({ type: 'existing' as const, id: s.supplement.id, servings: s.servings })),
+        stress: todayEntry?.stress ? { type: 'existing', id: todayEntry.stress.id } : undefined,
+        num_standard_drinks: todayEntry?.num_standard_drinks,
+        notes: todayEntry?.notes,
+        carb_cycle_day_id: todayEntry?.carb_cycle?.selected_day.id,
+      };
+      
+      if (todayEntry) {
+        await logEntryApi.update(todayEntry.id, updateData);
+      } else {
+        await logEntryApi.create(updateData);
+      }
+      
+      alert('Cardio copied to today!');
+    } catch (error) {
+      console.error('Failed to copy cardio:', error);
+      alert('Failed to copy cardio. Check console for details.');
+    }
   };
 
   const handleFoodDelete = async (foodIndex: number) => {
@@ -956,8 +1289,14 @@ export default function Home() {
                   )}
 
                   <div className="sections-grid">
-                    <QuickStats logEntry={logEntry} onEdit={() => setActiveModal('quickstats')} />
-                    <FoodsSection foods={logEntry?.foods} onAdd={() => setActiveModal('food')} onDelete={handleFoodDelete} onGramsChange={handleFoodGramsChange} />
+                    <QuickStats logEntry={logEntry} selectedDate={selectedDate} onEdit={() => setActiveModal('quickstats')} />
+                    <FoodsSection 
+                      foods={logEntry?.foods} 
+                      onAdd={() => setActiveModal('food')} 
+                      onDelete={handleFoodDelete} 
+                      onGramsChange={handleFoodGramsChange}
+                      onCopyToToday={!isToday() && logEntry?.foods && logEntry.foods.length > 0 ? handleCopyFoodsToToday : undefined}
+                    />
                     <ActivitiesSection
                       activities={logEntry?.activities}
                       onAdd={() => setActiveModal('workout')}
@@ -968,12 +1307,26 @@ export default function Home() {
                       onAddExercise={handleOpenAddExercise}
                       onExerciseDelete={handleExerciseDelete}
                       onSessionNotesChange={handleSessionNotesChange}
+                      onAddSet={handleAddSet}
+                      onDeleteSet={handleDeleteSet}
+                      onCopyToToday={!isToday() && logEntry?.activities && logEntry.activities.length > 0 ? handleCopyWorkoutsToToday : undefined}
                     />
-                    <SupplementsSection supplements={logEntry?.supplements} onAdd={() => setActiveModal('supplement')} onDelete={handleSupplementDelete} onServingsChange={handleSupplementServingsChange} />
+                    <SupplementsSection 
+                      supplements={logEntry?.supplements} 
+                      onAdd={() => setActiveModal('supplement')} 
+                      onDelete={handleSupplementDelete} 
+                      onServingsChange={handleSupplementServingsChange}
+                      onCopyToToday={!isToday() && logEntry?.supplements && logEntry.supplements.length > 0 ? handleCopySupplementsToToday : undefined}
+                    />
                     <SleepSection sleep={logEntry?.sleep} onAdd={() => setActiveModal('sleep')} onDelete={handleSleepDelete} />
                     <HydrationSection hydration={logEntry?.hydration} onAdd={() => setActiveModal('hydration')} onDelete={handleHydrationDelete} />
                     <StressSection stress={logEntry?.stress} onAdd={() => setActiveModal('stress')} />
-                    <CardioSection cardio={logEntry?.cardio} onAdd={() => setActiveModal('cardio')} onDelete={handleCardioDelete} />
+                    <CardioSection 
+                      cardio={logEntry?.cardio} 
+                      onAdd={() => setActiveModal('cardio')} 
+                      onDelete={handleCardioDelete}
+                      onCopyToToday={!isToday() && logEntry?.cardio && logEntry.cardio.length > 0 ? handleCopyCardioToToday : undefined}
+                    />
                     <ProgressPicturesSection 
                       logEntryId={logEntry?.id} 
                       pictures={logEntry?.progress_pictures}

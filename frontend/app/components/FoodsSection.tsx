@@ -8,11 +8,12 @@ interface FoodsSectionProps {
   onAdd?: () => void;
   onDelete?: (foodIndex: number) => void;
   onGramsChange?: (foodIndex: number, grams: number) => void;
+  onCopyToToday?: () => void;
 }
 
 type EditMode = 'grams' | 'servings';
 
-export default function FoodsSection({ foods, onAdd, onDelete, onGramsChange }: FoodsSectionProps) {
+export default function FoodsSection({ foods, onAdd, onDelete, onGramsChange, onCopyToToday }: FoodsSectionProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editMode, setEditMode] = useState<EditMode>('grams');
   const [editValue, setEditValue] = useState<string>('');
@@ -115,11 +116,13 @@ export default function FoodsSection({ foods, onAdd, onDelete, onGramsChange }: 
             <span className="section-icon">🍽️</span>
             Foods
           </div>
-          {onAdd && (
-            <button className="section-add-btn" onClick={onAdd} aria-label="Add food">
-              +
-            </button>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {onAdd && (
+              <button className="section-add-btn" onClick={onAdd} aria-label="Add food">
+                +
+              </button>
+            )}
+          </div>
         </div>
         <div className="section-empty">
           <span className="section-empty-icon">🥗</span>
@@ -140,6 +143,11 @@ export default function FoodsSection({ foods, onAdd, onDelete, onGramsChange }: 
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span className="section-badge">{foods.length} items</span>
+          {onCopyToToday && (
+            <button className="section-copy-btn" onClick={onCopyToToday} aria-label="Copy foods to today" title="Copy to today">
+              📋
+            </button>
+          )}
           {onAdd && (
             <button className="section-add-btn" onClick={onAdd} aria-label="Add food">
               +

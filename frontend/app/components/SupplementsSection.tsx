@@ -8,9 +8,10 @@ interface SupplementsSectionProps {
   onAdd?: () => void;
   onDelete?: (index: number) => void;
   onServingsChange?: (index: number, servings: number) => void;
+  onCopyToToday?: () => void;
 }
 
-export default function SupplementsSection({ supplements, onAdd, onDelete, onServingsChange }: SupplementsSectionProps) {
+export default function SupplementsSection({ supplements, onAdd, onDelete, onServingsChange, onCopyToToday }: SupplementsSectionProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -71,11 +72,13 @@ export default function SupplementsSection({ supplements, onAdd, onDelete, onSer
             <span className="section-icon">💊</span>
             Supplements
           </div>
-          {onAdd && (
-            <button className="section-add-btn" onClick={onAdd} aria-label="Add supplement">
-              +
-            </button>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {onAdd && (
+              <button className="section-add-btn" onClick={onAdd} aria-label="Add supplement">
+                +
+              </button>
+            )}
+          </div>
         </div>
         <div className="section-empty">
           <span className="section-empty-icon">💉</span>
@@ -94,6 +97,11 @@ export default function SupplementsSection({ supplements, onAdd, onDelete, onSer
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span className="section-badge">{supplements.length} items</span>
+          {onCopyToToday && (
+            <button className="section-copy-btn" onClick={onCopyToToday} aria-label="Copy supplements to today" title="Copy to today">
+              📋
+            </button>
+          )}
           {onAdd && (
             <button className="section-add-btn" onClick={onAdd} aria-label="Add supplement">
               +

@@ -13,6 +13,9 @@ interface ActivitiesSectionProps {
   onAddExercise?: (activityId: number) => void;
   onExerciseDelete?: (activityId: number, exerciseIndex: number) => void;
   onSessionNotesChange?: (activityId: number, exerciseId: number, notes: string) => void;
+  onAddSet?: (activityId: number, exerciseId: number) => void;
+  onDeleteSet?: (activityId: number, exerciseId: number, setId: number) => void;
+  onCopyToToday?: () => void;
 }
 
 interface DragState {
@@ -20,7 +23,7 @@ interface DragState {
   exerciseIndex: number;
 }
 
-export default function ActivitiesSection({ activities, onAdd, onDelete, onSetChange, onExerciseReorder, onTimeChange, onAddExercise, onExerciseDelete, onSessionNotesChange }: ActivitiesSectionProps) {
+export default function ActivitiesSection({ activities, onAdd, onDelete, onSetChange, onExerciseReorder, onTimeChange, onAddExercise, onExerciseDelete, onSessionNotesChange, onAddSet, onDeleteSet, onCopyToToday }: ActivitiesSectionProps) {
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<{ activityId: number; exerciseIndex: number } | null>(null);
   const [editingTimeId, setEditingTimeId] = useState<number | null>(null);
@@ -135,11 +138,13 @@ export default function ActivitiesSection({ activities, onAdd, onDelete, onSetCh
             <span className="section-icon">💪</span>
             Workouts
           </div>
-          {onAdd && (
-            <button className="section-add-btn" onClick={onAdd} aria-label="Add workout">
-              +
-            </button>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {onAdd && (
+              <button className="section-add-btn" onClick={onAdd} aria-label="Add workout">
+                +
+              </button>
+            )}
+          </div>
         </div>
         <div className="section-empty">
           <span className="section-empty-icon">🏋️</span>
@@ -168,6 +173,11 @@ export default function ActivitiesSection({ activities, onAdd, onDelete, onSetCh
               aria-label={showNotes ? 'Hide notes' : 'Show notes'}
             >
               📝
+            </button>
+          )}
+          {onCopyToToday && (
+            <button className="section-copy-btn" onClick={onCopyToToday} aria-label="Copy workouts to today" title="Copy to today">
+              📋
             </button>
           )}
           {onAdd && (
@@ -347,8 +357,27 @@ export default function ActivitiesSection({ activities, onAdd, onDelete, onSetCh
                           <span className="set-inline-suffix">RIR</span>
                         </label>
                         {showNotes && set.notes && <span className="set-notes">{set.notes}</span>}
+                        {onDeleteSet && (
+                          <button
+                            className="btn-delete-set"
+                            onClick={() => onDeleteSet(activity.id, actEx.id, set.id)}
+                            aria-label="Delete set"
+                            title="Remove set"
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
                     ))}
+                    {onAddSet && (
+                      <button
+                        className="btn-add-set"
+                        onClick={() => onAddSet(activity.id, actEx.id)}
+                        title="Add set"
+                      >
+                        + Set
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

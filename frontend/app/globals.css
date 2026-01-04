@@ -906,7 +906,7 @@ input[type="number"] {
 
 .set-item {
   display: grid;
-  grid-template-columns: auto auto auto auto auto;
+  grid-template-columns: auto auto auto auto auto auto;
   gap: 0.25rem;
   align-items: center;
   padding: 0.35rem 0.5rem;
@@ -1011,6 +1011,394 @@ input[type="number"] {
 .macro-item.protein .macro-value { color: var(--accent-primary); }
 .macro-item.carbs .macro-value { color: var(--accent-warning); }
 .macro-item.fat .macro-value { color: var(--accent-secondary); }
+
+/* ============================================================================
+   Quick Stats Grid
+   ============================================================================ */
+
+.quick-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.quick-stat-card {
+  position: relative;
+  text-align: center;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+.quick-stat-card:hover {
+  border-color: var(--border-accent);
+}
+
+.quick-stat-card-controls {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 10;
+}
+
+.quick-stat-card:hover .quick-stat-card-controls {
+  opacity: 1;
+}
+
+.card-control-btn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.card-control-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+}
+
+.card-control-btn.card-control-delete:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--accent-danger);
+  border-color: var(--accent-danger);
+}
+
+.quick-stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.quick-stat-unit {
+  font-size: 0.85rem;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+.quick-stat-change {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 0.25rem;
+}
+
+.quick-stat-change.positive {
+  color: var(--accent-success);
+}
+
+.quick-stat-change.negative {
+  color: var(--accent-danger);
+}
+
+.change-arrow {
+  font-weight: 700;
+}
+
+.change-percent {
+  opacity: 0.8;
+}
+
+.quick-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.quick-stat-edit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.quick-stat-edit-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.quick-stat-edit-btn.done {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: var(--bg-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: auto;
+  padding: 0 0.75rem;
+}
+
+.quick-stat-edit-btn.done:hover {
+  background: #33e1ff;
+}
+
+.add-card-btn {
+  border: 2px dashed var(--border-color);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 80px;
+}
+
+.add-card-btn:hover {
+  border-color: var(--accent-primary);
+  background: var(--bg-hover);
+}
+
+.add-card-icon {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+}
+
+.add-card-btn:hover .add-card-icon {
+  color: var(--accent-primary);
+}
+
+.add-card-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Card Editor Modal */
+.card-editor-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.card-editor-modal {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  width: 100%;
+  max-width: 400px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-editor-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.card-editor-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.card-editor-close:hover {
+  color: var(--text-primary);
+}
+
+.card-editor-body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.card-editor-field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-editor-field input,
+.card-editor-field select {
+  padding: 0.65rem 0.85rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  transition: border-color 0.2s ease;
+}
+
+.card-editor-field input:focus,
+.card-editor-field select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.card-editor-field select optgroup {
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.card-editor-radio-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.radio-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.65rem;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-option input {
+  display: none;
+}
+
+.radio-option span {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.radio-option:hover {
+  border-color: var(--accent-primary);
+}
+
+.radio-option.selected {
+  background: rgba(0, 217, 255, 0.1);
+  border-color: var(--accent-primary);
+}
+
+.radio-option.selected span {
+  color: var(--accent-primary);
+}
+
+.color-picker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.color-option {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+.color-option.selected {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--bg-secondary);
+}
+
+.card-editor-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.card-editor-cancel,
+.card-editor-save {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.card-editor-cancel {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.card-editor-cancel:hover {
+  background: var(--bg-hover);
+  border-color: var(--text-muted);
+}
+
+.card-editor-save {
+  background: var(--accent-primary);
+  border: none;
+  color: var(--bg-primary);
+}
+
+.card-editor-save:hover {
+  background: #33e1ff;
+}
 
 /* ============================================================================
    Sleep & Stress Meters
@@ -2244,6 +2632,27 @@ input[type="number"] {
 .section-add-btn:hover {
   background: #33e1ff;
   box-shadow: var(--shadow-glow);
+}
+
+.section-copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.section-copy-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
 }
 
 /* ============================================================================
@@ -4343,6 +4752,49 @@ input[type="number"] {
   background: var(--bg-hover);
   border-color: var(--accent-primary);
   color: var(--accent-primary);
+}
+
+/* Add Set Button */
+.btn-add-set {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.6rem;
+  margin-top: 0.25rem;
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-add-set:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+/* Delete Set Button */
+.btn-delete-set {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.set-item:hover .btn-delete-set {
+  opacity: 1;
+}
+
+.btn-delete-set:hover {
+  color: var(--accent-danger);
 }
 
 /* Add Exercise Modal */

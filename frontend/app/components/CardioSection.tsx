@@ -6,9 +6,10 @@ interface CardioSectionProps {
   cardio?: Cardio[];
   onAdd?: () => void;
   onDelete?: (cardioIndex: number) => void;
+  onCopyToToday?: () => void;
 }
 
-export default function CardioSection({ cardio, onAdd, onDelete }: CardioSectionProps) {
+export default function CardioSection({ cardio, onAdd, onDelete, onCopyToToday }: CardioSectionProps) {
   const formatTime = (timeStr: string) => {
     const date = new Date(timeStr);
     return date.toLocaleTimeString('en-US', {
@@ -80,11 +81,13 @@ export default function CardioSection({ cardio, onAdd, onDelete }: CardioSection
             <span className="section-icon">🏃</span>
             Cardio
           </div>
-          {onAdd && (
-            <button className="section-add-btn" onClick={onAdd} aria-label="Add cardio">
-              +
-            </button>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {onAdd && (
+              <button className="section-add-btn" onClick={onAdd} aria-label="Add cardio">
+                +
+              </button>
+            )}
+          </div>
         </div>
         <div className="section-empty">
           <span className="section-empty-icon">❤️</span>
@@ -105,6 +108,11 @@ export default function CardioSection({ cardio, onAdd, onDelete }: CardioSection
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span className="section-badge">{totalMinutes} min total</span>
+          {onCopyToToday && (
+            <button className="section-copy-btn" onClick={onCopyToToday} aria-label="Copy cardio to today" title="Copy to today">
+              📋
+            </button>
+          )}
           {onAdd && (
             <button className="section-add-btn" onClick={onAdd} aria-label="Add cardio">
               +
