@@ -537,7 +537,7 @@ export default function WorkoutForm({ date, onSubmit, onCancel }: WorkoutFormPro
                   <div key={itemIndex} className="activity-exercise-card movement-pattern-card">
                     <div className="activity-exercise-header">
                       <div className="exercise-info">
-                        <span className="movement-pattern-badge">🔄 Movement Pattern</span>
+                        <span className="movement-pattern-badge">🌀 Movement Pattern</span>
                         <span className="movement-pattern-name">{item.data.movement_pattern_name}</span>
                       </div>
                       <div className="exercise-actions">
@@ -665,7 +665,7 @@ export default function WorkoutForm({ date, onSubmit, onCancel }: WorkoutFormPro
                           }}
                           onFocus={(e) => e.target.select()}
                           className="form-input reps-input"
-                          placeholder="10"
+                          placeholder="Reps"
                         />
                         <span className="form-hint" aria-label="repetitions">×</span>
                         <input
@@ -679,7 +679,7 @@ export default function WorkoutForm({ date, onSubmit, onCancel }: WorkoutFormPro
                           }}
                           onFocus={(e) => e.target.select()}
                           className="form-input weight-input"
-                          placeholder="0"
+                          placeholder="Weight"
                         />
                         <select
                           value={set.unit}

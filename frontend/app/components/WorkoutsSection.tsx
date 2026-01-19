@@ -147,7 +147,7 @@ export default function ActivitiesSection({ activities, onAdd, onDelete, onSetCh
           </div>
         </div>
         <div className="section-empty">
-          <span className="section-empty-icon">🏋️</span>
+          <span className="section-empty-icon">🏆</span>
           <span>No workouts recorded</span>
         </div>
       </div>

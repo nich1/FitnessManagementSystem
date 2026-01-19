@@ -31,13 +31,14 @@ import WorkoutsManager from './components/managers/WorkoutsManager';
 import CupsManager from './components/managers/CupsManager';
 import SupplementsManager from './components/managers/SupplementsManager';
 import CompoundsManager from './components/managers/CompoundsManager';
-import CarbCycleManager from './components/managers/CarbCycleManager';
 import MesocycleManager from './components/managers/MesocycleManager';
 import SupplementCycleManager from './components/managers/SupplementCycleManager';
 import StatsView from './components/StatsView';
 import WeightManager from './components/managers/WeightManager';
 import ComparisonTool from './components/managers/ComparisonTool';
+import ThemeManager from './components/managers/ThemeManager';
 import { useConfirmDialog } from './components/ConfirmDialog';
+import { ThemeProvider } from './ThemeContext';
 
 type ModalType = 'sleep' | 'food' | 'workout' | 'cardio' | 'stress' | 'hydration' | 'supplement' | 'quickstats' | 'addExercise' | null;
 
@@ -1246,8 +1247,6 @@ export default function Home() {
         return <SupplementsManager />;
       case 'compounds':
         return <CompoundsManager />;
-      case 'carb-cycle':
-        return <CarbCycleManager />;
       case 'mesocycle':
         return <MesocycleManager />;
       case 'supplement-cycle':
@@ -1258,6 +1257,8 @@ export default function Home() {
         return <WeightManager onWeightUpdated={() => fetchLogEntry(selectedDate)} />;
       case 'comparison-tool':
         return <ComparisonTool />;
+      case 'themes':
+        return <ThemeManager />;
       case 'daily':
       default:
         return (
@@ -1351,86 +1352,88 @@ export default function Home() {
   };
 
   return (
-    <div className="app-layout">
-      <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-      
-      <main className="main-area">
-        {renderContent()}
-      </main>
+    <ThemeProvider>
+      <div className="app-layout">
+        <Sidebar currentView={currentView} onViewChange={setCurrentView} />
+        
+        <main className="main-area">
+          {renderContent()}
+        </main>
 
-      {/* Modals */}
-      <Modal isOpen={activeModal !== null} onClose={closeModal} title={activeModal ? modalTitles[activeModal] : ''}>
-        {activeModal === 'sleep' && (
-          <SleepForm date={formatDateForApi(selectedDate)} onSubmit={handleSleepSubmit} onCancel={closeModal} />
-        )}
-        {activeModal === 'food' && (
-          <AddFoodForm onSubmit={handleAddFoodSubmit} onCancel={closeModal} />
-        )}
-        {activeModal === 'workout' && (
-          <WorkoutForm date={selectedDate} onSubmit={handleActivitySubmit} onCancel={closeModal} />
-        )}
-        {activeModal === 'cardio' && (
-          <CardioForm date={selectedDate} onSubmit={handleCardioSubmit} onCancel={closeModal} />
-        )}
-        {activeModal === 'stress' && (
-          <StressForm date={selectedDate} onSubmit={handleStressSubmit} onCancel={closeModal} />
-        )}
-        {activeModal === 'hydration' && (
-          <HydrationForm date={selectedDate} onSubmit={handleHydrationSubmit} onCancel={closeModal} />
-        )}
-        {activeModal === 'supplement' && (
-          <SupplementForm onSubmit={handleSupplementSubmit} onCancel={closeModal} />
-        )}
-        {activeModal === 'quickstats' && (
-          <QuickStatsForm
-            initialData={{
-              phase_id: logEntry?.phase?.id,
-              morning_weight: logEntry?.morning_weight,
-              num_standard_drinks: logEntry?.num_standard_drinks,
-              notes: logEntry?.notes,
-              carb_cycle_id: logEntry?.carb_cycle?.carb_cycle.id,
-              carb_cycle_day_id: logEntry?.carb_cycle?.selected_day.id,
-            }}
-            onSubmit={handleQuickStatsSubmit}
-            onCancel={closeModal}
-          />
-        )}
-        {activeModal === 'addExercise' && (
-          <div className="add-exercise-modal">
-            <input
-              type="text"
-              className="exercise-search-input"
-              placeholder="Search exercises..."
-              value={exerciseSearchQuery}
-              onChange={(e) => setExerciseSearchQuery(e.target.value)}
-              autoFocus
+        {/* Modals */}
+        <Modal isOpen={activeModal !== null} onClose={closeModal} title={activeModal ? modalTitles[activeModal] : ''}>
+          {activeModal === 'sleep' && (
+            <SleepForm date={formatDateForApi(selectedDate)} onSubmit={handleSleepSubmit} onCancel={closeModal} />
+          )}
+          {activeModal === 'food' && (
+            <AddFoodForm onSubmit={handleAddFoodSubmit} onCancel={closeModal} />
+          )}
+          {activeModal === 'workout' && (
+            <WorkoutForm date={selectedDate} onSubmit={handleActivitySubmit} onCancel={closeModal} />
+          )}
+          {activeModal === 'cardio' && (
+            <CardioForm date={selectedDate} onSubmit={handleCardioSubmit} onCancel={closeModal} />
+          )}
+          {activeModal === 'stress' && (
+            <StressForm date={selectedDate} onSubmit={handleStressSubmit} onCancel={closeModal} />
+          )}
+          {activeModal === 'hydration' && (
+            <HydrationForm date={selectedDate} onSubmit={handleHydrationSubmit} onCancel={closeModal} />
+          )}
+          {activeModal === 'supplement' && (
+            <SupplementForm onSubmit={handleSupplementSubmit} onCancel={closeModal} />
+          )}
+          {activeModal === 'quickstats' && (
+            <QuickStatsForm
+              initialData={{
+                phase_id: logEntry?.phase?.id,
+                morning_weight: logEntry?.morning_weight,
+                num_standard_drinks: logEntry?.num_standard_drinks,
+                notes: logEntry?.notes,
+                carb_cycle_id: logEntry?.carb_cycle?.carb_cycle.id,
+                carb_cycle_day_id: logEntry?.carb_cycle?.selected_day.id,
+              }}
+              onSubmit={handleQuickStatsSubmit}
+              onCancel={closeModal}
             />
-            <div className="exercise-list">
-              {availableExercises
-                .filter(ex => ex.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase()))
-                .map(ex => (
-                  <button
-                    key={ex.id}
-                    className="exercise-list-item"
-                    onClick={() => handleAddExerciseToActivity(ex.id)}
-                  >
-                    {ex.name}
-                  </button>
-                ))
-              }
-              {availableExercises.filter(ex => ex.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase())).length === 0 && (
-                <div className="exercise-list-empty">No exercises found</div>
-              )}
+          )}
+          {activeModal === 'addExercise' && (
+            <div className="add-exercise-modal">
+              <input
+                type="text"
+                className="exercise-search-input"
+                placeholder="Search exercises..."
+                value={exerciseSearchQuery}
+                onChange={(e) => setExerciseSearchQuery(e.target.value)}
+                autoFocus
+              />
+              <div className="exercise-list">
+                {availableExercises
+                  .filter(ex => ex.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase()))
+                  .map(ex => (
+                    <button
+                      key={ex.id}
+                      className="exercise-list-item"
+                      onClick={() => handleAddExerciseToActivity(ex.id)}
+                    >
+                      {ex.name}
+                    </button>
+                  ))
+                }
+                {availableExercises.filter(ex => ex.name.toLowerCase().includes(exerciseSearchQuery.toLowerCase())).length === 0 && (
+                  <div className="exercise-list-empty">No exercises found</div>
+                )}
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={closeModal}>Cancel</button>
+              </div>
             </div>
-            <div className="modal-actions">
-              <button type="button" className="btn-secondary" onClick={closeModal}>Cancel</button>
-            </div>
-          </div>
-        )}
-      </Modal>
+          )}
+        </Modal>
 
-      {/* Confirm Dialog */}
-      {ConfirmDialogComponent}
-    </div>
+        {/* Confirm Dialog */}
+        {ConfirmDialogComponent}
+      </div>
+    </ThemeProvider>
   );
 }

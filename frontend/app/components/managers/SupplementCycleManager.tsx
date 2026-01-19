@@ -251,7 +251,7 @@ export default function SupplementCycleManager() {
   return (
     <div className="manager">
       <div className="manager-header">
-        <h2 className="manager-title">💊 Supplement Cycles</h2>
+        <h2 className="manager-title">⚡ Supplement Cycles</h2>
         <div className="manager-actions">
           <input
             type="text"
@@ -477,7 +477,7 @@ export default function SupplementCycleManager() {
                         <div className="day-detail-items">
                           {day.items.map((item) => (
                             <div key={item.id} className="day-detail-item">
-                              <span className="item-icon">{item.supplement_id ? '💊' : '🧪'}</span>
+                              <span className="item-icon">{item.supplement_id ? '⚡' : '🧬'}</span>
                               <span className="item-name">{getItemName(item)}</span>
                               <span className="item-amount">
                                 {item.amount} {getItemUnit(item)}

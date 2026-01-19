@@ -101,10 +101,9 @@ class SupplementCycleRepository:
         model.name = name
         model.description = description
 
-        # Delete existing days (cascade deletes items)
-        self.db.query(SupplementCycleDayModel).filter(
-            SupplementCycleDayModel.supplement_cycle_id == supplement_cycle_id
-        ).delete()
+        # Delete existing days through ORM (this triggers cascade="all, delete-orphan")
+        model.days.clear()
+        self.db.flush()
 
         # Add new days
         for position, day in enumerate(days):

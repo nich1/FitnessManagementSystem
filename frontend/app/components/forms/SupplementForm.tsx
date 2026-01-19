@@ -300,7 +300,7 @@ export default function SupplementForm({ onSubmit, onCancel }: SupplementFormPro
                   <div className="cycle-day-preview">
                     {getDaySupplementItems().length > 0 && (
                       <div className="preview-section">
-                        <div className="preview-header">💊 Supplements</div>
+                        <div className="preview-header">⚡ Supplements</div>
                         {getDaySupplementItems().map((item, idx) => (
                           <div key={idx} className="preview-item">
                             <span className="preview-name">

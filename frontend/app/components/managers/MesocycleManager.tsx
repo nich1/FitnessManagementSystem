@@ -455,7 +455,7 @@ export default function MesocycleManager() {
                             <option value="">+ Add Day</option>
                             <option value={REST_DAY_ID}>🛌 Rest Day</option>
                             {workouts.map(w => (
-                              <option key={w.id} value={w.id}>🏋️ {w.name}</option>
+                              <option key={w.id} value={w.id}>🏆 {w.name}</option>
                             ))}
                           </select>
                         </div>
@@ -479,7 +479,7 @@ export default function MesocycleManager() {
                                 >
                                   <span className="workout-drag-handle" title="Drag to reorder">⋮⋮</span>
                                   <span className="workout-position">Day {workoutIndex + 1}</span>
-                                  <span className="workout-icon">{isRestDay(workoutId) ? '🛌' : '🏋️'}</span>
+                                  <span className="workout-icon">{isRestDay(workoutId) ? '🛌' : '🏆'}</span>
                                   <span className="workout-name">{workout?.name || 'Unknown'}</span>
                                   <button
                                     type="button"
@@ -539,7 +539,7 @@ export default function MesocycleManager() {
                         ⏱️ {getDuration(mesocycle.start_date, mesocycle.end_date)}
                       </span>
                       <span className="meta-item">
-                        🔄 {mesocycle.microcycles.length} microcycles
+                        🌀 {mesocycle.microcycles.length} microcycles
                       </span>
                     </div>
                   </div>

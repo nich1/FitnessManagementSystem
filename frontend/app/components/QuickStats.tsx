@@ -7,6 +7,7 @@ import { statsApi, logEntryApi } from '../api';
 const METRIC_LABELS: Record<string, string> = {
   weight: 'Weight',
   morning_weight: 'Morning Weight',
+  weight_vs_last_week_avg: 'Weight vs Last Week Avg',
   calories: 'Calories',
   protein: 'Protein',
   complete_protein: 'Complete Protein',
@@ -34,6 +35,7 @@ const METRIC_LABELS: Record<string, string> = {
 const METRIC_UNITS: Record<string, string> = {
   weight: 'lb',
   morning_weight: 'lb',
+  weight_vs_last_week_avg: 'lb',
   calories: 'cal',
   protein: 'g',
   complete_protein: 'g',
@@ -186,11 +188,23 @@ export default function QuickStats({ logEntry, selectedDate, onEdit }: QuickStat
 
     const calculateValues = async () => {
       const values: Record<string, CardValue> = {};
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      // Use local timezone, not UTC (toISOString converts to UTC which causes date shifts)
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+
+      console.log('QuickStats - Calculating values for cards:', cards.map(c => ({ id: c.id, metric: c.metric })));
 
       for (const card of cards) {
+        console.log('QuickStats - Processing card:', card.id, 'metric:', card.metric);
         try {
-          if (card.displayMode === 'value') {
+          // Special handling for weight_vs_last_week_avg metric
+          if (card.metric === 'weight_vs_last_week_avg') {
+            console.log('QuickStats - Matched weight_vs_last_week_avg!');
+            const weightVsLastWeek = await getWeightVsLastWeekAvg(dateStr, logEntry);
+            values[card.id] = weightVsLastWeek;
+          } else if (card.displayMode === 'value') {
             // Simple day value
             values[card.id] = { value: getDayValue(card, logEntry) };
           } else if (card.displayMode === 'comparison') {
@@ -305,6 +319,90 @@ export default function QuickStats({ logEntry, selectedDate, onEdit }: QuickStat
         return stressLabels[entry.stress.level] || entry.stress.level;
       default:
         return null;
+    }
+  };
+
+  // Get weight vs last week's average (same calculation as Weight Manager)
+  const getWeightVsLastWeekAvg = async (
+    currentDateStr: string,
+    entry: LogEntry | null | undefined
+  ): Promise<CardValue> => {
+    const todayWeight = entry?.morning_weight ?? null;
+    
+    try {
+      // Get entries for the past 14 days to calculate last week's average
+      // Use T12:00:00 to avoid timezone edge cases (noon is safely in the middle of the day)
+      const endDate = new Date(currentDateStr + 'T12:00:00');
+      const startDate = new Date(currentDateStr + 'T12:00:00');
+      startDate.setDate(startDate.getDate() - 14);
+      
+      // Format dates for API using local timezone
+      const formatDate = (d: Date) => {
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      console.log('Weight vs Last Week - Query params:', {
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate),
+        todayWeight,
+        currentDateStr,
+      });
+
+      const response = await statsApi.query({
+        metrics: ['weight'],
+        date_range_type: 'custom',
+        start_date: formatDate(startDate),
+        end_date: formatDate(endDate),
+        aggregation: 'daily',
+      });
+
+      console.log('Weight vs Last Week - API response:', response);
+
+      const metricData = response.metrics[0];
+      if (!metricData) {
+        console.log('Weight vs Last Week - No metric data returned');
+        return { value: todayWeight };
+      }
+
+      console.log('Weight vs Last Week - Metric data:', metricData.data);
+
+      // Get entries from the past 7 days (excluding today)
+      const lastWeekData = metricData.data.filter(d => {
+        const dDate = new Date(d.date + 'T12:00:00');
+        const daysDiff = Math.floor((endDate.getTime() - dDate.getTime()) / (1000 * 60 * 60 * 24));
+        console.log(`  Date: ${d.date}, value: ${d.value}, daysDiff: ${daysDiff}, included: ${daysDiff >= 1 && daysDiff <= 7 && d.value !== null}`);
+        return daysDiff >= 1 && daysDiff <= 7 && d.value !== null;
+      });
+
+      console.log('Weight vs Last Week - Filtered data (last 7 days):', lastWeekData);
+
+      const lastWeekAvg = lastWeekData.length > 0
+        ? lastWeekData.reduce((sum, d) => sum + (d.value ?? 0), 0) / lastWeekData.length
+        : null;
+
+      console.log('Weight vs Last Week - Result:', { todayWeight, lastWeekAvg, change: todayWeight !== null && lastWeekAvg !== null ? todayWeight - lastWeekAvg : null });
+
+      const change = todayWeight !== null && lastWeekAvg !== null 
+        ? todayWeight - lastWeekAvg 
+        : null;
+      const percentChange = change !== null && lastWeekAvg !== null && lastWeekAvg !== 0
+        ? (change / lastWeekAvg) * 100
+        : null;
+
+      return {
+        value: todayWeight,
+        comparison: {
+          previousValue: lastWeekAvg,
+          change,
+          percentChange,
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching weight vs last week:', error);
+      return { value: todayWeight };
     }
   };
 
@@ -450,6 +548,9 @@ export default function QuickStats({ logEntry, selectedDate, onEdit }: QuickStat
     const value = cardValue?.value;
     const comparison = cardValue?.comparison;
 
+    // Special rendering for weight_vs_last_week_avg - show change as the main value
+    const isWeightVsLastWeek = card.metric === 'weight_vs_last_week_avg';
+
     return (
       <div key={card.id} className="quick-stat-card">
         {isEditing && (
@@ -485,12 +586,34 @@ export default function QuickStats({ logEntry, selectedDate, onEdit }: QuickStat
           </div>
         )}
         
-        <div className="quick-stat-value" style={{ color: card.color || 'var(--text-primary)' }}>
-          {formatValue(card, value)}
-          {card.unit && <span className="quick-stat-unit">{card.unit}</span>}
-        </div>
+        {isWeightVsLastWeek ? (
+          // Special display for weight vs last week - show change as main value
+          <div 
+            className="quick-stat-value" 
+            style={{ 
+              color: comparison?.change != null 
+                ? (comparison.change > 0 ? 'var(--accent-danger)' : comparison.change < 0 ? 'var(--accent-success)' : 'var(--text-secondary)')
+                : 'var(--text-secondary)'
+            }}
+          >
+            {comparison?.change != null ? (
+              <>
+                <span className="weight-change-arrow">{comparison.change > 0 ? '▲' : comparison.change < 0 ? '▼' : ''}</span>
+                {' '}{comparison.change > 0 ? '+' : ''}{comparison.change.toFixed(1)}
+                <span className="quick-stat-unit">lb</span>
+              </>
+            ) : (
+              '—'
+            )}
+          </div>
+        ) : (
+          <div className="quick-stat-value" style={{ color: card.color || 'var(--text-primary)' }}>
+            {formatValue(card, value)}
+            {card.unit && <span className="quick-stat-unit">{card.unit}</span>}
+          </div>
+        )}
         
-        {card.displayMode === 'comparison' && comparison && (
+        {card.displayMode === 'comparison' && !isWeightVsLastWeek && comparison && (
           <div className={`quick-stat-change ${comparison.change !== null && comparison.change >= 0 ? 'positive' : 'negative'}`}>
             {comparison.change !== null ? (
               <>
@@ -616,6 +739,7 @@ interface CardEditorModalProps {
 const AVAILABLE_METRICS = [
   { value: 'morning_weight', label: 'Morning Weight', group: 'Body' },
   { value: 'weight', label: 'Weight (from stats)', group: 'Body' },
+  { value: 'weight_vs_last_week_avg', label: 'Weight vs Last Week Avg', group: 'Body' },
   { value: 'calories', label: 'Calories', group: 'Nutrition' },
   { value: 'protein', label: 'Protein', group: 'Nutrition' },
   { value: 'complete_protein', label: 'Complete Protein', group: 'Nutrition' },

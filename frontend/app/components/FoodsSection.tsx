@@ -113,7 +113,7 @@ export default function FoodsSection({ foods, onAdd, onDelete, onGramsChange, on
       <div className="section-card">
         <div className="section-header">
           <div className="section-title">
-            <span className="section-icon">🍽️</span>
+            <span className="section-icon">🥗</span>
             Foods
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -125,7 +125,7 @@ export default function FoodsSection({ foods, onAdd, onDelete, onGramsChange, on
           </div>
         </div>
         <div className="section-empty">
-          <span className="section-empty-icon">🥗</span>
+          <span className="section-empty-icon">🍽️</span>
           <span>No foods recorded</span>
         </div>
       </div>
@@ -138,7 +138,7 @@ export default function FoodsSection({ foods, onAdd, onDelete, onGramsChange, on
     <div className="section-card">
       <div className="section-header">
         <div className="section-title">
-          <span className="section-icon">🍽️</span>
+          <span className="section-icon">🥗</span>
           Foods
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

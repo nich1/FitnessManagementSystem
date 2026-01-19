@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export type View = 'daily' | 'foods' | 'meals' | 'exercises' | 'movement-patterns' | 'workouts' | 'cups' | 'supplements' | 'compounds' | 'stats' | 'carb-cycle' | 'mesocycle' | 'supplement-cycle' | 'weight' | 'comparison-tool';
+export type View = 'daily' | 'foods' | 'meals' | 'exercises' | 'movement-patterns' | 'workouts' | 'cups' | 'supplements' | 'compounds' | 'stats' | 'mesocycle' | 'supplement-cycle' | 'weight' | 'comparison-tool' | 'themes';
 
 interface SidebarProps {
   currentView: View;
@@ -30,25 +30,23 @@ const isDropdown = (item: NavEntry): item is DropdownNavItem => {
 const navItems: NavEntry[] = [
   { view: 'daily', label: 'Daily Log', icon: '📅' },
   { view: 'weight', label: 'Weight', icon: '⚖️' },
-  { view: 'comparison-tool', label: 'Comparison Tool', icon: '📸' },
-  { view: 'foods', label: 'Foods', icon: '🍎' },
-  { view: 'meals', label: 'Meals', icon: '🍽️' },
-  { view: 'movement-patterns', label: 'Movement Patterns', icon: '🔄' },
+  { view: 'foods', label: 'Foods', icon: '🥕' },
+  { view: 'meals', label: 'Meals', icon: '🥗' },
+
   { view: 'exercises', label: 'Exercises', icon: '💪' },
-  { view: 'workouts', label: 'Workouts', icon: '🏋️' },
+  { view: 'workouts', label: 'Workouts', icon: '🏆' },
+  { view: 'movement-patterns', label: 'Movement Patterns', icon: '🌀' },
+  { view: 'mesocycle', label: 'Mesocycles', icon: '📆' },
+
   { view: 'cups', label: 'Cups', icon: '🥤' },
-  { view: 'supplements', label: 'Supplements', icon: '💊' },
-  { view: 'compounds', label: 'Compounds', icon: '🧪' },
+  { view: 'compounds', label: 'Compounds', icon: '🧬' },
+
+  { view: 'supplements', label: 'Supplements', icon: '⚡' },
+  { view: 'supplement-cycle', label: 'Supplement Cycle', icon: '🔁' },
+  { view: 'comparison-tool', label: 'Comparison Tool', icon: '📸' },
+
   { view: 'stats', label: 'Stats', icon: '📊' },
-  { 
-    label: 'Cycles', 
-    icon: '🔁',
-    children: [
-      { view: 'carb-cycle', label: 'Carb Cycle', icon: '🍞' },
-      { view: 'mesocycle', label: 'Mesocycle', icon: '📊' },
-      { view: 'supplement-cycle', label: 'Supplement Cycle', icon: '💊' },
-    ]
-  },
+  { view: 'themes', label: 'Themes', icon: '🎨' },
 ];
 
 export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
@@ -123,7 +121,7 @@ export default function Sidebar({ currentView, onViewChange }: SidebarProps) {
 
       <div className="sidebar-footer">
         {!collapsed && (
-          <p className="sidebar-hint">Manage your fitness data</p>
+          <p className="sidebar-hint">Built by: _Nich</p>
         )}
       </div>
     </aside>
